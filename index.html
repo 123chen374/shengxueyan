@@ -7,164 +7,69 @@
     <style>
         /* --- 基础重置 --- */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { 
-            width: 100%; height: 100%; overflow: hidden; 
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; 
-            background-color: #000; color: #fff;
-        }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background-color: #000; color: #fff; }
 
         /* --- 背景 Canvas (粒子特效) --- */
-        #bgCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none;
-        }
+        #bgCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 
         /* --- 容器与页面 --- */
         .container { width: 100%; height: 100%; position: relative; z-index: 1; }
-        
-        .page {
-            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            transform: translateY(100%);
-            padding: 20px;
-            text-align: center;
-        }
-
-        .page.active {
-            opacity: 1; visibility: visible;
-            transform: translateY(0);
-            z-index: 10;
-        }
-        
-        .page.prev {
-            transform: translateY(-100%);
-            opacity: 0;
-        }
+        .page { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(100%); padding: 20px; text-align: center; }
+        .page.active { opacity: 1; visibility: visible; transform: translateY(0); z-index: 10; }
+        .page.prev { transform: translateY(-100%); opacity: 0; }
 
         /* --- 动态内容样式 --- */
-        .content-wrapper {
-            position: relative; z-index: 2;
-            width: 100%; max-width: 500px;
-        }
-
-        /* 标题动画类 */
-        .anim-item {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .page.active .anim-item {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 延迟设置 */
+        .content-wrapper { position: relative; z-index: 2; width: 100%; max-width: 500px; }
+        .anim-item { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .page.active .anim-item { opacity: 1; transform: translateY(0); }
         .d-1 { transition-delay: 0.1s; }
         .d-2 { transition-delay: 0.3s; }
         .d-3 { transition-delay: 0.5s; }
         .d-4 { transition-delay: 0.7s; }
-
         h1 { font-size: 2.5rem; margin-bottom: 10px; color: #ffd700; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
         h2 { font-size: 1.5rem; margin-bottom: 20px; font-weight: 300; letter-spacing: 2px; }
         p { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; color: rgba(255,255,255,0.9); }
 
         /* 3D 翻转卡片容器 */
-        .flip-card {
-            background-color: transparent;
-            width: 260px;
-            height: 360px;
-            perspective: 1000px;
-            margin: 20px auto;
-            cursor: pointer;
-        }
-
-        .flip-card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-radius: 15px;
-        }
-
-        .flip-card.flipped .flip-card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .flip-card-front, .flip-card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            border: 2px solid #ffd700;
-        }
-
-        .flip-card-front {
-            background: linear-gradient(135deg, #8B0000 0%, #d31027 100%);
-            color: white;
-        }
-
-        .flip-card-back {
-            background: linear-gradient(135deg, #ffd700 0%, #fdb931 100%);
-            color: #8B0000;
-            transform: rotateY(180deg);
-        }
-
-        .tap-hint {
-            font-size: 0.8rem;
-            margin-top: 10px;
-            opacity: 0.7;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
+        .flip-card { background-color: transparent; width: 260px; height: 360px; perspective: 1000px; margin: 20px auto; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 15px; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; border: 2px solid #ffd700; }
+        .flip-card-front { background: linear-gradient(135deg, #8B0000 0%, #d31027 100%); color: white; }
+        .flip-card-back { background: linear-gradient(135deg, #ffd700 0%, #fdb931 100%); color: #8B0000; transform: rotateY(180deg); }
+        .tap-hint { font-size: 0.8rem; margin-top: 10px; opacity: 0.7; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
         /* 底部箭头 */
-        .arrow-up {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 24px; height: 24px; border-top: 2px solid #fff; border-left: 2px solid #fff;
-            transform: translateX(-50%) rotate(45deg); 
-            animation: bounce 1.5s infinite; z-index: 10; opacity: 0.6;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) rotate(45deg) translate(0, 0); }
-            50% { transform: translateX(-50%) rotate(45deg) translate(-5px, -5px); }
-        }
+        .arrow-up { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-top: 2px solid #fff; border-left: 2px solid #fff; transform: translateX(-50%) rotate(45deg); animation: bounce 1.5s infinite; z-index: 10; opacity: 0.6; }
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) rotate(45deg) translate(0, 0); } 50% { transform: translateX(-50%) rotate(45deg) translate(-5px, -5px); } }
 
         /* 音乐按钮 */
-        .music-btn {
-            position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; z-index: 100;
-            border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            animation: spin 4s linear infinite;
-        }
+        .music-btn { position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; z-index: 100; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: spin 4s linear infinite; }
         .music-btn.paused { animation-play-state: paused; opacity: 0.5; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* 装饰线条 */
-        .divider {
-            width: 50px; height: 2px; background: #ffd700; margin: 20px auto;
+        .divider { width: 50px; height: 2px; background: #ffd700; margin: 20px auto; }
+
+        /* --- 开屏动画样式 --- */
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; cursor: pointer; transition: opacity 0.8s ease;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
     </style>
 </head>
 <body>
-
     <!-- 背景粒子画布 -->
     <canvas id="bgCanvas"></canvas>
 
@@ -172,7 +77,6 @@
     <div class="music-btn" id="musicBtn">🎵</div>
 
     <div class="container" id="swipeContainer">
-        
         <!-- 第一页：封面 -->
         <div class="page active">
             <div class="content-wrapper">
@@ -190,13 +94,12 @@
         <div class="page">
             <div class="content-wrapper">
                 <h2 class="anim-item d-1">录取喜讯</h2>
-                
                 <!-- 3D 翻转组件 -->
                 <div class="flip-card anim-item d-2" onclick="this.classList.toggle('flipped')">
                     <div class="flip-card-inner">
                         <div class="flip-card-front">
-                          <!-- 替换为录取通知书图片 -->
-                          <img src="images/photo1.jpg" alt="录取通知书" style="width: 100%; height: 100%; object-fit: cover; border-radius: 13px;">
+                            <!-- 替换为录取通知书图片 -->
+                            <img src="images/photo1.jpg" alt="录取通知书" style="width: 100%; height: 100%; object-fit: cover; border-radius: 13px;">
                         </div>
                         <div class="flip-card-back">
                             <h3>广西民族大学</h3>
@@ -206,69 +109,71 @@
                         </div>
                     </div>
                 </div>
-
                 <p class="anim-item d-3">特备薄酒，恭请光临</p>
             </div>
             <div class="arrow-up"></div>
         </div>
 
-                <!-- === 第三页：风采展示 === -->
+        <!-- === 第三页：风采展示 === -->
         <div class="page">
-          <div class="content-wrapper">
-            <h2 class="anim-item d-1">风采展示</h2>
-            
-            <!-- 第一张图片 -->
-            <div class="anim-item d-2" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-              <img src="images/photo2.jpg" alt="风采展示1" style="width: 100%; display: block;">
+            <div class="content-wrapper">
+                <h2 class="anim-item d-1">风采展示</h2>
+                <!-- 第一张图片 -->
+                <div class="anim-item d-2" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <img src="images/photo2.jpg" alt="风采展示1" style="width: 100%; display: block;">
+                </div>
+                <!-- 第二张图片 -->
+                <div class="anim-item d-3" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <img src="images/photo3.jpg" alt="风采展示2" style="width: 100%; display: block;">
+                </div>
+                <p class="anim-item d-4" style="margin-top: 30px; opacity: 0.7;">—— 记录成长点滴 ——</p>
             </div>
-        
-            <!-- 第二张图片 -->
-            <div class="anim-item d-3" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-              <img src="images/photo3.jpg" alt="风采展示2" style="width: 100%; display: block;">
-            </div>
-        
-            <p class="anim-item d-4" style="margin-top: 30px; opacity: 0.7;">—— 记录成长点滴 ——</p>
-          </div>
-          <!-- 这是最后一页，所以不需要向上的箭头 -->
         </div>
 
         <!-- 第四页：信息 -->
-        <!-- 第四页：宴会详情与出席登记 -->
         <div class="page">
-          <div class="content-wrapper">
-            <h2 class="anim-item d-1">宴会详情</h2>
-            
-            <!-- 宴会信息卡片 -->
-            <div class="anim-item d-2" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 20px 0; backdrop-filter: blur(5px);">
-              <p style="font-size: 1.2rem; color: #ffd700;">2023年8月29日</p>
-              <p>星期六 下午 18:00</p>
-              <p style="font-size: 1.2rem; color: #ffd700; margin-top: 15px;">2023年8月30日</p>
-              <p>星期日 中午 12:00（正宴）</p>
+            <div class="content-wrapper">
+                <h2 class="anim-item d-1">宴会详情</h2>
+                <!-- 宴会信息卡片 -->
+                <div class="anim-item d-2" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 20px 0; backdrop-filter: blur(5px);">
+                    <p style="font-size: 1.2rem; color: #ffd700;">2023年8月29日</p>
+                    <p>星期六 下午 18:00</p>
+                    <p style="font-size: 1.2rem; color: #ffd700; margin-top: 15px;">2023年8月30日</p>
+                    <p>星期日 中午 12:00（正宴）</p>
+                </div>
+                <div class="anim-item d-3">
+                    <!-- 将下面的 href 替换为你刚才复制的高德地图链接 -->
+                    <p> <a href="https://surl.amap.com/xGMDPA1xB" target="_blank" style="color: #d63384; text-decoration: underline; font-weight: bold;"> 📍 隆昌市黄家镇螺蛳村园仓房子（点击跳转） </a> </p>
+                </div>
+                <!-- 腾讯表单入口卡片 -->
+                <a href="https://docs.qq.com/form/page/DSk91Vk1mdnZDS3Jk" target="_blank" class="anim-item d-4" style="display:block; max-width:300px; margin:40px auto 0; padding:25px 30px; background:rgba(255,255,255,0.95); border-radius:20px; text-decoration:none; color:#333; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
+                    <div style="font-size:40px; margin-bottom:10px;">💌</div>
+                    <div style="font-size:18px; font-weight:bold; color:#8B0000;">确认是否出席</div>
+                    <div style="font-size:14px; color:#666; margin-top:8px;">方便我们为您安排座位</div>
+                </a>
             </div>
-        
-            <div class="anim-item d-3">
-              <!-- 将下面的 href 替换为你刚才复制的高德地图链接 -->
-                <p>
-                    <a href="https://surl.amap.com/xGMDPA1xB" 
-                       target="_blank" 
-                       style="color: #d63384; text-decoration: underline; font-weight: bold;">
-                       📍 隆昌市黄家镇螺蛳村园仓房子（点击跳转）
-                    </a>
-                </p>
-            </div>
-        
-            <!-- 腾讯表单入口卡片 -->
-            <a href="https://docs.qq.com/form/page/DSk91Vk1mdnZDS3Jk" target="_blank" class="anim-item d-4" 
-               style="display:block; max-width:300px; margin:40px auto 0; padding:25px 30px; background:rgba(255,255,255,0.95); border-radius:20px; text-decoration:none; color:#333; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
-              <div style="font-size:40px; margin-bottom:10px;">💌</div>
-              <div style="font-size:18px; font-weight:bold; color:#8B0000;">确认是否出席</div>
-              <div style="font-size:14px; color:#666; margin-top:8px;">方便我们为您安排座位</div>
-            </a>
-        
-          </div>
-          <!-- 注意：最后一页通常不需要向上的箭头 -->
         </div>
+    </div>
 
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" src="images/bgm.mp3" loop preload="auto"></audio>
+
+    <!-- 开屏动画 -->
+    <div id="splash" onclick="enterSite()" style="
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      z-index:9999; cursor:pointer; transition:opacity 0.8s ease;
+    ">
+      <div style="font-size:36px; color:#fff; margin-bottom:20px; animation:fadeInDown 1s ease;">
+        🎓
+      </div>
+      <div style="font-size:24px; color:#fff; margin-bottom:10px; animation:fadeInDown 1.2s ease;">
+        诚邀您参加升学宴
+      </div>
+      <div style="font-size:14px; color:rgba(255,255,255,0.7); margin-top:30px; animation:blink 1.5s infinite;">
+        — 点击屏幕进入 —
+      </div>
     </div>
 
     <script>
@@ -276,7 +181,6 @@
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -285,9 +189,7 @@
         resizeCanvas();
 
         class Particle {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); }
             reset() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
@@ -307,22 +209,14 @@
                 ctx.fill();
             }
         }
-
         // 初始化粒子
-        for (let i = 0; i < 50; i++) {
-            particles.push(new Particle());
-        }
-
+        for (let i = 0; i < 50; i++) { particles.push(new Particle()); }
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+            particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animateParticles);
         }
         animateParticles();
-
 
         // --- 2. 页面滑动逻辑 ---
         const container = document.getElementById('swipeContainer');
@@ -347,13 +241,9 @@
             isMoving = false;
             const endY = e.changedTouches[0].clientY;
             const diff = startY - endY;
-
             if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentPage < totalPages - 1) {
-                    nextPage();
-                } else if (diff < 0 && currentPage > 0) {
-                    prevPage();
-                }
+                if (diff > 0 && currentPage < totalPages - 1) { nextPage(); }
+                else if (diff < 0 && currentPage > 0) { prevPage(); }
             }
         });
 
@@ -363,25 +253,38 @@
             currentPage++;
             pages[currentPage].classList.add('active');
         }
-
         function prevPage() {
             pages[currentPage].classList.remove('active');
             currentPage--;
             pages[currentPage].classList.remove('prev');
             pages[currentPage].classList.add('active');
         }
-
         // 鼠标滚轮兼容
         window.addEventListener('wheel', (e) => {
             if (e.deltaY > 0 && currentPage < totalPages - 1) nextPage();
             else if (e.deltaY < 0 && currentPage > 0) prevPage();
         });
-    
-        
+
+        // --- 3. 开屏动画与音乐播放 ---
+        function enterSite() {
+            // 播放音乐
+            var music = document.getElementById('bgMusic');
+            music.play().then(() => {
+                // 音乐播放成功后，启动音乐按钮的旋转动画
+                document.getElementById('musicBtn').classList.remove('paused');
+            }).catch(function(error) {
+                console.log('音乐播放失败:', error);
+            });
+
+            // 开屏动画淡出
+            var splash = document.getElementById('splash');
+            splash.style.opacity = '0';
+
+            // 淡出完成后移除开屏层
+            setTimeout(function() {
+                splash.style.display = 'none';
+            }, 800);
+        }
     </script>
-    <!-- 背景音乐 -->
-    <audio id="bgMusic" src="bgm.mp3" loop></audio>
-    <script>document.addEventListener('click',function(){document.getElementById('bgMusic').play()},{once:true})</script>
-    
 </body>
 </html>
