@@ -265,31 +265,12 @@
             else if (e.deltaY < 0 && currentPage > 0) prevPage();
         });
 
-        // --- 3. 开屏动画与音乐播放 ---
-        function enterSite() {
-            // 播放音乐
-            var music = document.getElementById('bgMusic');
-            music.play().then(() => {
-                // 音乐播放成功后，启动音乐按钮的旋转动画
-                document.getElementById('musicBtn').classList.remove('paused');
-            }).catch(function(error) {
-                console.log('音乐播放失败:', error);
-            });
-
-            // 开屏动画淡出
-            var splash = document.getElementById('splash');
-            splash.style.opacity = '0';
-
-            // 淡出完成后移除开屏层
-            setTimeout(function() {
-                splash.style.display = 'none';
-            }, 800);
-        }
         (function () {
     // 图片依次加载的间隔时间，单位毫秒
     var delay = 500;
 
-    var audio = document.getElementById('bgm');
+    // 1. 修正了这里：ID 从 'bgm' 改为 'bgMusic'，与你HTML中的ID保持一致
+    var audio = document.getElementById('bgMusic');
     var images = document.querySelectorAll('img[data-src]');
 
     function startImageLoad() {
@@ -324,7 +305,6 @@
     // 开始加载音乐
     audio.load();
 })();
-
     </script>
 </body>
 </html>
