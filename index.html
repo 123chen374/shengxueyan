@@ -386,6 +386,56 @@
             // 这里可以添加真实的 audio.play() / pause()
         });
 
+    // --- 3. 音乐按钮交互 ---
+        const musicBtn = document.getElementById('musicBtn');
+        const bgMusic = document.getElementById('bgMusic');
+        let isPlaying = false; // 初始状态设为 false，等待用户点击
+        
+        // 为音乐按钮添加点击事件
+        musicBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                // 如果正在播放，则暂停
+                bgMusic.pause();
+                musicBtn.classList.add('paused');
+            } else {
+                // 如果已暂停，则播放
+                bgMusic.play().then(() => {
+                    // 播放成功后，移除暂停样式
+                    musicBtn.classList.remove('paused');
+                }).catch(error => {
+                    // 处理自动播放被浏览器阻止的情况
+                    console.log('音乐播放被阻止，需要用户交互后才能播放。', error);
+                });
+            }
+            // 切换播放状态
+            isPlaying = !isPlaying;
+        });
+        
+        // 页面首次加载时，尝试播放音乐（现代浏览器通常会阻止，所以主要依赖用户点击）
+        window.addEventListener('load', () => {
+            // 我们不在这里自动播放，而是等待用户第一次点击屏幕来触发
+            // 这样可以确保在所有浏览器（尤其是微信）中都能正常播放
+            const startAudio = () => {
+                if (!isPlaying) {
+                    bgMusic.play().then(() => {
+                        isPlaying = true;
+                        musicBtn.classList.remove('paused');
+                    }).catch(() => {
+                        // 如果还是失败，就保持静音状态，等待用户点击按钮
+                    });
+                }
+                // 移除这个一次性的监听器
+                document.removeEventListener('touchstart', startAudio);
+                document.removeEventListener('click', startAudio);
+            };
+            
+            // 监听用户的第一次触摸或点击
+            document.addEventListener('touchstart', startAudio, { once: true });
+            document.addEventListener('click', startAudio, { once: true });
+        });
+        
     </script>
+    <!-- 背景音乐 -->
+<audio id="bgMusic" src="bgm.mp3" loop></audio>
 </body>
 </html>
