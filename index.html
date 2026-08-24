@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -265,7 +266,9 @@
             else if (e.deltaY < 0 && currentPage > 0) prevPage();
         });
 
-        (function () {
+        // --- 3. 开屏动画与音乐播放 ---
+     <script>
+(function () {
     // 图片依次加载的间隔时间，单位毫秒
     var delay = 500;
 
@@ -305,6 +308,8 @@
     // 开始加载音乐
     audio.load();
 })();
+</script>
+
     </script>
 </body>
 </html>
