@@ -2,172 +2,329 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>陈鸿权同学升学宴邀请</title>
     <style>
-        /* --- 基础样式 --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
-        
-        /* 全屏容器 */
-        #app { position: relative; width: 100%; height: 100%; }
+        /* --- 基础重置 --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background-color: #000; color: #fff; }
 
-        /* --- 加载遮罩层 (Loading Screen) --- */
-        #loading-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; color: #fff;
-            transition: opacity 1s ease;
+        /* --- 背景 Canvas (粒子特效) --- */
+        #bgCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        /* --- 容器与页面 --- */
+        .container { width: 100%; height: 100%; position: relative; z-index: 1; }
+        .page { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(100%); padding: 20px; text-align: center; }
+        .page.active { opacity: 1; visibility: visible; transform: translateY(0); z-index: 10; }
+        .page.prev { transform: translateY(-100%); opacity: 0; }
+
+        /* --- 动态内容样式 --- */
+        .content-wrapper { position: relative; z-index: 2; width: 100%; max-width: 500px; }
+        .anim-item { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .page.active .anim-item { opacity: 1; transform: translateY(0); }
+        .d-1 { transition-delay: 0.1s; }
+        .d-2 { transition-delay: 0.3s; }
+        .d-3 { transition-delay: 0.5s; }
+        .d-4 { transition-delay: 0.7s; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; color: #ffd700; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+        h2 { font-size: 1.5rem; margin-bottom: 20px; font-weight: 300; letter-spacing: 2px; }
+        p { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; color: rgba(255,255,255,0.9); }
+
+        /* 3D 翻转卡片容器 */
+        .flip-card { background-color: transparent; width: 260px; height: 360px; perspective: 1000px; margin: 20px auto; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 15px; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; border: 2px solid #ffd700; }
+        .flip-card-front { background: linear-gradient(135deg, #8B0000 0%, #d31027 100%); color: white; }
+        .flip-card-back { background: linear-gradient(135deg, #ffd700 0%, #fdb931 100%); color: #8B0000; transform: rotateY(180deg); }
+        .tap-hint { font-size: 0.8rem; margin-top: 10px; opacity: 0.7; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* 底部箭头 */
+        .arrow-up { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-top: 2px solid #fff; border-left: 2px solid #fff; transform: translateX(-50%) rotate(45deg); animation: bounce 1.5s infinite; z-index: 10; opacity: 0.6; }
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) rotate(45deg) translate(0, 0); } 50% { transform: translateX(-50%) rotate(45deg) translate(-5px, -5px); } }
+
+        /* 音乐按钮 */
+        .music-btn { position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; z-index: 100; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: spin 4s linear infinite; }
+        .music-btn.paused { animation-play-state: paused; opacity: 0.5; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 装饰线条 */
+        .divider { width: 50px; height: 2px; background: #ffd700; margin: 20px auto; }
+
+        /* --- 开屏动画样式 --- */
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; cursor: pointer; transition: opacity 0.8s ease;
         }
-        .loading-text { font-size: 16px; letter-spacing: 2px; margin-top: 20px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-
-        /* --- 内容区域 --- */
-        .content-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; /* 初始隐藏，等音乐Ready后再淡入 */
-            transition: opacity 1.5s ease;
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        /* 图片样式：初始不可见，用于JS控制动画 */
-        .photo-item {
-            width: 80%; max-width: 400px; margin: 10px auto;
-            border-radius: 10px; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
-            opacity: 0; transform: translateY(20px); /* 初始下沉且透明 */
-            transition: all 0.8s ease-out; /* 上浮动画 */
-            display: block;
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
-
-        /* 激活状态的类 */
-        .photo-item.visible { opacity: 1; transform: translateY(0); }
-
-        /* 简单的文字标题 */
-        h1 { color: #fff; margin-bottom: 20px; font-weight: 300; text-align: center; opacity: 0; transition: opacity 1s; }
-        h1.visible { opacity: 1; }
-
     </style>
 </head>
 <body>
+    <!-- 背景粒子画布 -->
+    <canvas id="bgCanvas"></canvas>
 
-<div id="app">
-    <!-- 1. 加载层 -->
-    <div id="loading-screen">
-        <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <div class="loading-text">正在准备惊喜...</div>
+    <!-- 音乐按钮 -->
+    <div class="music-btn" id="musicBtn">🎵</div>
+
+    <div class="container" id="swipeContainer">
+        <!-- 第一页：封面 -->
+        <div class="page active">
+            <div class="content-wrapper">
+                <div class="anim-item d-1" style="font-size: 3rem;">🎓</div>
+                <h1 class="anim-item d-2">金榜题名</h1>
+                <div class="divider anim-item d-3"></div>
+                <h2 class="anim-item d-3">陈鸿权 · 升学宴</h2>
+                <p class="anim-item d-4">诚邀您见证孩子的成长时刻</p>
+                <p class="anim-item d-4" style="font-size: 0.8rem; margin-top: 30px; opacity: 0.6;">向上滑动查看更多</p>
+            </div>
+            <div class="arrow-up"></div>
+        </div>
+
+        <!-- 第二页：3D 翻转卡片 -->
+        <div class="page">
+            <div class="content-wrapper">
+                <h2 class="anim-item d-1">录取喜讯</h2>
+                <!-- 3D 翻转组件 -->
+                <div class="flip-card anim-item d-2" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <!-- 替换为录取通知书图片 -->
+                            <img data-src="images/photo1.jpg" alt="录取通知书" style="width: 100%; height: 100%; object-fit: cover; border-radius: 13px;">
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>广西民族大学</h3>
+                            <p style="color: #8B0000; font-weight: bold; margin: 10px 0;">计算机科学与技术</p>
+                            <p>十年寒窗苦读</p>
+                            <p>今朝梦想成真</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="anim-item d-3">特备薄酒，恭请光临</p>
+            </div>
+            <div class="arrow-up"></div>
+        </div>
+
+        <!-- === 第三页：风采展示 === -->
+        <div class="page">
+            <div class="content-wrapper">
+                <h2 class="anim-item d-1">风采展示</h2>
+                <!-- 第一张图片 -->
+                <div class="anim-item d-2" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <img data-src="images/photo2.jpg" alt="风采展示1" style="width: 100%; display: block;">
+                </div>
+                <!-- 第二张图片 -->
+                <div class="anim-item d-3" style="margin: 20px auto; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <img data-src="images/photo3.jpg" alt="风采展示2" style="width: 100%; display: block;">
+                </div>
+                <p class="anim-item d-4" style="margin-top: 30px; opacity: 0.7;">—— 记录成长点滴 ——</p>
+            </div>
+        </div>
+
+        <!-- 第四页：信息 -->
+        <div class="page">
+            <div class="content-wrapper">
+                <h2 class="anim-item d-1">宴会详情</h2>
+                <!-- 宴会信息卡片 -->
+                <div class="anim-item d-2" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 20px 0; backdrop-filter: blur(5px);">
+                    <p style="font-size: 1.2rem; color: #ffd700;">2023年8月29日</p>
+                    <p>星期六 下午 18:00</p>
+                    <p style="font-size: 1.2rem; color: #ffd700; margin-top: 15px;">2023年8月30日</p>
+                    <p>星期日 中午 12:00（正宴）</p>
+                </div>
+                <div class="anim-item d-3">
+                    <!-- 将下面的 href 替换为你刚才复制的高德地图链接 -->
+                    <p> <a href="https://surl.amap.com/xGMDPA1xB" target="_blank" style="color: #d63384; text-decoration: underline; font-weight: bold;"> 📍 隆昌市黄家镇螺蛳村园仓房子（点击跳转） </a> </p>
+                </div>
+                <!-- 腾讯表单入口卡片 -->
+                <a href="https://docs.qq.com/form/page/DSk91Vk1mdnZDS3Jk" target="_blank" class="anim-item d-4" style="display:block; max-width:300px; margin:40px auto 0; padding:25px 30px; background:rgba(255,255,255,0.95); border-radius:20px; text-decoration:none; color:#333; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
+                    <div style="font-size:40px; margin-bottom:10px;">💌</div>
+                    <div style="font-size:18px; font-weight:bold; color:#8B0000;">确认是否出席</div>
+                    <div style="font-size:14px; color:#666; margin-top:8px;">方便我们为您安排座位</div>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- 2. 内容层 -->
-    <div class="content-layer" id="main-content">
-        <h1 id="main-title">升学宴邀请</h1>
-        
-        <!-- 这里的 src 先留空或放一个极小的占位图，data-src 放真实地址 -->
-        <!-- 这种写法叫“懒加载”，防止浏览器自动偷跑流量 -->
-        <img class="photo-item" data-src="images/photo1.jpg" alt="照片1">
-        <img class="photo-item" data-src="images/photo2.jpg" alt="照片2">
-        <img class="photo-item" data-src="images/photo3.jpg" alt="照片3">
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" src="bgm.mp3" loop preload="auto"></audio>
+
+    <!-- 开屏动画 -->
+    <div id="splash" onclick="enterSite()" style="
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      z-index:9999; cursor:pointer; transition:opacity 0.8s ease;
+    ">
+      <div style="font-size:36px; color:#fff; margin-bottom:20px; animation:fadeInDown 1s ease;">
+        🎓
+      </div>
+      <div style="font-size:24px; color:#fff; margin-bottom:10px; animation:fadeInDown 1.2s ease;">
+        诚邀您参加升学宴
+      </div>
+      <div style="font-size:14px; color:rgba(255,255,255,0.7); margin-top:30px; animation:blink 1.5s infinite;">
+        — 点击屏幕进入 —
+      </div>
     </div>
-</div>
 
-<!-- 音乐文件 (隐藏) -->
-<audio id="bgm" loop preload="auto">
-    <source src="bgm.mp3" type="audio/mpeg">
-</audio>
+    <script>
+        // --- 1. 粒子背景特效 (纯前端 Canvas) ---
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.color = `rgba(255, 215, 0, ${this.opacity})`; // 金色粒子
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        // 初始化粒子
+        for (let i = 0; i < 50; i++) { particles.push(new Particle()); }
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
 
-<script>
-    // 配置项
-    const CONFIG = {
-        musicSrc: 'images/bgm.mp3', // 你的音乐路径
-        photoDelay: 400,            // 每张图片出现的间隔时间 (毫秒)
-        startDelay: 500             // 音乐就绪后，等待多久开始展示内容
-    };
+        // --- 2. 页面滑动逻辑 ---
+        const container = document.getElementById('swipeContainer');
+        const pages = document.querySelectorAll('.page');
+        let currentPage = 0;
+        const totalPages = pages.length;
+        let startY = 0;
+        let isMoving = false;
 
-    const audio = document.getElementById('bgm');
-    const loadingScreen = document.getElementById('loading-screen');
-    const mainContent = document.getElementById('main-content');
-    const photos = document.querySelectorAll('.photo-item');
-    const title = document.getElementById('main-title');
+        container.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            isMoving = true;
+        }, {passive: false});
 
-    // 核心逻辑：预加载管理器
-    function initLoader() {
-        console.log("开始预加载音乐...");
-        
-        // 1. 强制加载音乐
-        audio.load();
+        container.addEventListener('touchmove', (e) => {
+            if (!isMoving) return;
+            e.preventDefault(); // 阻止默认滚动
+        }, {passive: false});
 
-        // 2. 监听音乐可以播放的事件
-        // canplaythrough: 浏览器估计如果现在开始播放，音频可以一直播放到结束而不需要停止缓冲
-        audio.addEventListener('canplaythrough', onMusicReady, { once: true });
-        
-        // 备用方案：如果网络极快，canplaythrough可能不触发，监听 loadeddata
-        audio.addEventListener('loadeddata', onMusicReady, { once: true });
-    }
-
-    function onMusicReady() {
-        console.log("音乐已就绪，准备展示...");
-        
-        // 尝试播放一下（静音），以解锁浏览器的自动播放策略
-        // 这样用户后续点击交互时就能直接有声音
-        audio.play().then(() => {
-            audio.pause(); 
-            audio.currentTime = 0;
-        }).catch(e => console.log("等待用户交互解锁音频"));
-
-        setTimeout(startShowSequence, CONFIG.startDelay);
-    }
-
-    function startShowSequence() {
-        // 1. 隐藏 Loading 层
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => { loadingScreen.style.display = 'none'; }, 1000);
-
-        // 2. 显示主内容背景
-        mainContent.style.opacity = '1';
-        
-        // 3. 真正开始加载图片资源 (将 data-src 赋值给 src)
-        // 此时浏览器才开始下载图片，保证带宽全给音乐用完了
-        photos.forEach((img, index) => {
-            const realSrc = img.getAttribute('data-src');
-            if(realSrc) {
-                img.src = realSrc; // 触发图片下载
-                
-                // 设置依次显示的动画
-                setTimeout(() => {
-                    img.classList.add('visible');
-                }, index * CONFIG.photoDelay + 500); // 基础延迟 + 间隔
+        container.addEventListener('touchend', (e) => {
+            if (!isMoving) return;
+            isMoving = false;
+            const endY = e.changedTouches[0].clientY;
+            const diff = startY - endY;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentPage < totalPages - 1) { nextPage(); }
+                else if (diff < 0 && currentPage > 0) { prevPage(); }
             }
         });
 
-        // 标题显示
-        setTimeout(() => title.classList.add('visible'), 200);
-
-        // 4. 正式播放音乐
-        // 注意：大多数浏览器仍要求用户有点击操作才能发声。
-        // 如果你的场景是用户点击进入的页面，这里可以直接 play()。
-        // 如果是直接打开URL，可能需要加一个点击事件监听器来触发 play()。
-        playMusicSafely();
-    }
-
-    function playMusicSafely() {
-        audio.volume = 0.8;
-        let playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("自动播放被拦截，添加点击监听");
-                // 如果自动播放失败，添加一次性点击事件来播放
-                document.body.addEventListener('click', function unlockAudio() {
-                    audio.play();
-                    document.body.removeEventListener('click', unlockAudio);
-                }, { once: true });
-            });
+        function nextPage() {
+            pages[currentPage].classList.remove('active');
+            pages[currentPage].classList.add('prev');
+            currentPage++;
+            pages[currentPage].classList.add('active');
         }
+        function prevPage() {
+            pages[currentPage].classList.remove('active');
+            currentPage--;
+            pages[currentPage].classList.remove('prev');
+            pages[currentPage].classList.add('active');
+        }
+        // 鼠标滚轮兼容
+        window.addEventListener('wheel', (e) => {
+            if (e.deltaY > 0 && currentPage < totalPages - 1) nextPage();
+            else if (e.deltaY < 0 && currentPage > 0) prevPage();
+        });
+
+        // --- 3. 开屏动画与音乐播放 ---
+        function enterSite() {
+            // 播放音乐
+            var music = document.getElementById('bgMusic');
+            music.play().then(() => {
+                // 音乐播放成功后，启动音乐按钮的旋转动画
+                document.getElementById('musicBtn').classList.remove('paused');
+            }).catch(function(error) {
+                console.log('音乐播放失败:', error);
+            });
+
+            // 开屏动画淡出
+            var splash = document.getElementById('splash');
+            splash.style.opacity = '0';
+
+            // 淡出完成后移除开屏层
+            setTimeout(function() {
+                splash.style.display = 'none';
+            }, 800);
+        }
+        (function () {
+    // 图片依次加载的间隔时间，单位毫秒
+    var delay = 500;
+
+    var audio = document.getElementById('bgm');
+    var images = document.querySelectorAll('img[data-src]');
+
+    function startImageLoad() {
+        images.forEach(function (img, index) {
+            setTimeout(function () {
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                }
+            }, index * delay);
+        });
     }
 
-    // 启动
-    window.onload = initLoader;
+    if (!audio) {
+        startImageLoad();
+        return;
+    }
 
-</script>
+    var started = false;
+
+    function onReady() {
+        if (started) return;
+        started = true;
+        startImageLoad();
+    }
+
+    audio.addEventListener('canplaythrough', onReady);
+    audio.addEventListener('loadeddata', onReady);
+
+    // 如果音乐加载异常或太慢，最多等 4 秒后也继续加载图片
+    setTimeout(onReady, 4000);
+
+    // 开始加载音乐
+    audio.load();
+})();
+
+    </script>
 </body>
 </html>
